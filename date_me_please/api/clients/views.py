@@ -1,6 +1,6 @@
+import os
 import smtplib
 
-from django.template.loader import render_to_string
 from django.utils.translation import gettext as _
 from django.contrib.auth.models import User
 from django.db.models import QuerySet
@@ -11,7 +11,6 @@ from django.db.models.functions import (
     Abs,
     Sqrt,
     Power,
-    ACos,
     Radians,
 )
 from django.db.models import F
@@ -156,7 +155,34 @@ class LoverListView(generics.ListAPIView):
 class LikeUserView(views.APIView):
     """Класс-контроллер оценки пользователя"""
 
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, )
+
+    def __send_love(self, beloved: User, lover: User) -> None:
+        """Метод отправки письма со взаимной симпатией"""
+
+        # FIXME:
+        #  Этот способ отправки сообщения, как по-мне, - костыль, хоть и рабочий
+        #  Необходимо разобраться, почему не работает стандартный
+        #  способ отправки сообщений.
+        server = smtplib.SMTP('smtp.gmail.com', 25)
+        server.connect("smtp.gmail.com", 587)
+        server.ehlo()
+        server.starttls()
+        server.ehlo()
+
+        EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+        EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+
+        server.login(EMAIL_HOST_USER, EMAIL_HOST_PASSWORD)
+
+        text = f'From: my_apptrix_test@test.com\n' \
+               f'Subject: Есть взаимная симпатия!\n' \
+               f'Вы понравились {lover.username}!\n' \
+               f'Почта участника: {lover.email}.'.encode('utf-8')
+
+        server.sendmail(EMAIL_HOST_USER, beloved.email, text)
+        server.quit()
+
 
     def post(self, request: Request, *args, **kwargs) -> Response:
         """Метод для оценки пользователя другим пользователем"""
@@ -185,26 +211,8 @@ class LikeUserView(views.APIView):
         # который уже есть в списке тех, кто оценил текущего пользователя.
         if liked_user.profile in current_user.profile.lovers.all():
             # Отправляем пользователям письма.
-            # current_user.email_user(
-            #     subject=render_to_string('clients/subject_template.txt'),
-            #     message=render_to_string(
-            #         template_name='clients/message_template.txt',
-            #         context={
-            #             'username': liked_user.username,
-            #             'email': liked_user.email,
-            #         }
-            #     )
-            # )
-            # liked_user.email_user(
-            #     subject=render_to_string('clients/subject_template.txt'),
-            #     message=render_to_string(
-            #         template_name='clients/message_template.txt',
-            #         context={
-            #             'username': current_user.username,
-            #             'email': current_user.email,
-            #         }
-            #     )
-            # )
+            self.__send_love(current_user, liked_user)
+            self.__send_love(liked_user, current_user)
 
             # Т.к. взаимная симпатия достигнута, можно больше не отслеживать,
             # кто кого оценил. Удаляем связь пользователей.

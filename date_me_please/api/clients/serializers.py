@@ -1,3 +1,5 @@
+import sys
+
 from rest_framework import serializers
 from rest_framework import validators
 from django.contrib.auth.models import User
@@ -87,10 +89,12 @@ class RegisterSerializer(serializers.ModelSerializer):
             latitude=profile_data['latitude'],
         )
 
-        # FIXME: Сделать нормальную передачу путей до изображений.
-        import sys
+        # FIXME:
+        #  Сделать нормальный импорт.
+        #  Разобраться, почему не работает относительный.
         set_watermark(sys.path[0] + new_profile.avatar.url,
-                      sys.path[0] + '/clients/static/clients/img/watermark.png')
+                      sys.path[0] + '/clients/static/clients/img/watermark.png',
+                      (0, 0))
 
         return new_user
 
