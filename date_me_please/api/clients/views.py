@@ -1,3 +1,5 @@
+import smtplib
+
 from django.template.loader import render_to_string
 from django.contrib.auth.models import User
 from rest_framework import generics
@@ -9,11 +11,13 @@ from rest_framework.permissions import (
 )
 from rest_framework.response import Response
 from rest_framework.request import Request
+from django_filters import rest_framework as filters
 
 from .serializers import (
     RegisterSerializer,
     UserSerializer,
 )
+from clients.models import Profile
 
 
 class RegisterView(generics.CreateAPIView):
@@ -35,16 +39,45 @@ class UserDetailView(generics.RetrieveAPIView):
     serializer_class = UserSerializer
 
 
+class UserFilter(filters.FilterSet):
+    """Фильтр для пользователей"""
+
+    gender = filters.ChoiceFilter(
+        field_name='profile__gender',
+        choices=Profile.Gender.choices,
+    )
+
+    class Meta:
+        """Класс настроект фильтра"""
+        model = User
+        fields = ('first_name', 'last_name', 'gender')
+
+
 class UserListView(generics.ListAPIView):
     """Класс-контроллер списка пользователей"""
+
+    queryset = User.objects.all()
+    permission_classes = (AllowAny, )
+    serializer_class = UserSerializer
+    filterset_class = UserFilter
+
+    def get(self, request: Request, *args, **kwargs) -> Response:
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = UserSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+class LoverListView(generics.ListAPIView):
+    """Класс-контроллер списка оценивших пользователей"""
 
     queryset = User.objects.all()
     permission_classes = (IsAuthenticated, )
     serializer_class = UserSerializer
 
     def get(self, request: Request, *args, **kwargs) -> Response:
-        queryset = self.get_queryset()
-        serializer = UserSerializer(queryset, many=True)
+        lovers = [lover_profile.user for lover_profile in
+                  request.user.profile.lovers.all()]
+        serializer = UserSerializer(lovers, many=True)
         return Response(serializer.data)
 
 
@@ -104,17 +137,3 @@ class LikeUserView(views.APIView):
         liked_user.profile.lovers.add(current_user.profile)
 
         return Response(data={'msg': f'Вы оценили {liked_user.username}'})
-
-
-class LoverListView(generics.ListAPIView):
-    """Класс-контроллер списка оценивших пользователей"""
-
-    queryset = User.objects.all()
-    permission_classes = (IsAuthenticated, )
-    serializer_class = UserSerializer
-
-    def get(self, request: Request, *args, **kwargs) -> Response:
-        lovers = [lover_profile.user for lover_profile in
-                  request.user.profile.lovers.all()]
-        serializer = UserSerializer(lovers, many=True)
-        return Response(serializer.data)

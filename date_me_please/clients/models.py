@@ -42,7 +42,6 @@ class Profile(models.Model):
 
     class Meta:
         """Класс настроек модели"""
-
         verbose_name = _('Профиль пользователя')
         verbose_name_plural = _('Профили пользователей')
 
