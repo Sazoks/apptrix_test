@@ -2,6 +2,7 @@ from rest_framework import serializers
 from rest_framework import validators
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
+from django.utils.translation import gettext_lazy as _
 
 from clients.models import Profile
 
@@ -11,8 +12,10 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         """Класс настроек сериализатора"""
+
         model = Profile
-        fields = ('avatar', 'gender')
+        fields = ('avatar', 'gender',
+                  'longitude', 'latitude')
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -21,23 +24,35 @@ class RegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
         required=True,
         validators=[validators.UniqueValidator(queryset=User.objects.all())],
+        label=_('Эл. почта'),
     )
     password = serializers.CharField(
         write_only=True,
         required=True,
         validators=[validate_password],
+        label=_('Пароль'),
     )
     confirm_password = serializers.CharField(
         write_only=True,
         required=True,
+        label=_('Подтверждение пароля'),
     )
-    profile = ProfileSerializer()
+    first_name = serializers.CharField(
+        required=True,
+        label=_('Настоящее имя'),
+    )
+    last_name = serializers.CharField(
+        required=True,
+        label=_('Фамилия'),
+    )
+    profile = ProfileSerializer(label=_('Профиль'))
 
     class Meta:
         """Класс настроект сериализатора"""
+
         model = User
         fields = ('username', 'password', 'confirm_password',
-                  'email', 'profile')
+                  'email', 'first_name', 'last_name', 'profile')
 
     def validate(self, attrs):
         """Метод валидации"""
@@ -54,6 +69,8 @@ class RegisterSerializer(serializers.ModelSerializer):
         # Сначала создаем пользователя в БД.
         new_user = User(
             username=validated_data['username'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name'],
             email=validated_data['email'],
         )
         new_user.set_password(validated_data['password'])
@@ -63,7 +80,10 @@ class RegisterSerializer(serializers.ModelSerializer):
         profile_data = validated_data['profile']
         Profile.objects.create(
             user=new_user,
+            avatar=profile_data['avatar'],
             gender=profile_data['gender'],
+            longitude=profile_data['longitude'],
+            latitude=profile_data['latitude'],
         )
 
         return new_user
@@ -76,6 +96,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         """Класс настроек сериализатора"""
+
         model = User
         fields = ('pk', 'username', 'first_name',
                   'last_name', 'email', 'profile')

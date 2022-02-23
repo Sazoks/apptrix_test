@@ -49,6 +49,7 @@ class UserFilter(filters.FilterSet):
 
     class Meta:
         """Класс настроект фильтра"""
+
         model = User
         fields = ('first_name', 'last_name', 'gender')
 
@@ -62,6 +63,8 @@ class UserListView(generics.ListAPIView):
     filterset_class = UserFilter
 
     def get(self, request: Request, *args, **kwargs) -> Response:
+        """Метод для отправки отфильтрованного списка пользователей"""
+
         queryset = self.filter_queryset(self.get_queryset())
         serializer = UserSerializer(queryset, many=True)
         return Response(serializer.data)
@@ -75,6 +78,8 @@ class LoverListView(generics.ListAPIView):
     serializer_class = UserSerializer
 
     def get(self, request: Request, *args, **kwargs) -> Response:
+        """Метод для отправки списка оценивших пользователей"""
+
         lovers = [lover_profile.user for lover_profile in
                   request.user.profile.lovers.all()]
         serializer = UserSerializer(lovers, many=True)

@@ -1,4 +1,5 @@
 from django.db import models
+from django.core import validators
 from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
 
@@ -18,8 +19,6 @@ class Profile(models.Model):
 
     avatar = models.ImageField(
         upload_to='user_avatars',
-        null=True,
-        blank=True,
         verbose_name=_('Аватар'),
     )
     gender = models.CharField(
@@ -27,17 +26,35 @@ class Profile(models.Model):
         choices=Gender.choices,
         verbose_name=_('Пол'),
     )
-    lovers = models.ManyToManyField(
-        to='Profile',
-        symmetrical=False,
-        blank=True,
-        verbose_name=_('Оценившие'),
+    longitude = models.DecimalField(
+        max_digits=13,
+        decimal_places=10,
+        validators=[validators.MinValueValidator(-180),
+                    validators.MaxValueValidator(180)],
+        verbose_name=_('Долгота'),
+        help_text=_('Северное направление считается положительным. '
+                    'Южное - отрицательным.')
+    )
+    latitude = models.DecimalField(
+        max_digits=13,
+        decimal_places=10,
+        validators=[validators.MinValueValidator(-180),
+                    validators.MaxValueValidator(180)],
+        verbose_name=_('Широта'),
+        help_text=_('Восточное направление считается положительным. '
+                    'Западное - отрицательным.')
     )
     user = models.OneToOneField(
         to=User,
         on_delete=models.CASCADE,
         related_name='profile',
         verbose_name=_('Пользователь')
+    )
+    lovers = models.ManyToManyField(
+        to='Profile',
+        symmetrical=False,
+        blank=True,
+        verbose_name=_('Оценившие'),
     )
 
     class Meta:
@@ -46,4 +63,4 @@ class Profile(models.Model):
         verbose_name_plural = _('Профили пользователей')
 
     def __str__(self) -> str:
-        return f'{self.user} profile'
+        return f'{_("Профиль")} пользователя {self.user}'
