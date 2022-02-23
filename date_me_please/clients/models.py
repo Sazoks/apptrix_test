@@ -19,6 +19,8 @@ class Profile(models.Model):
     avatar = models.ImageField(
         upload_to='user_avatars',
         verbose_name=_('Аватар'),
+        null=True,
+        blank=True,
     )
     gender = models.CharField(
         max_length=2,
