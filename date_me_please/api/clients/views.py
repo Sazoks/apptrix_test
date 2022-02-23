@@ -1,12 +1,18 @@
 import smtplib
 
 from django.template.loader import render_to_string
+from django.utils.translation import gettext as _
 from django.contrib.auth.models import User
+from django.db.models import QuerySet
 from django.db.models.functions import (
     Sin,
     Cos,
-    ACos,
+    ATan,
     Abs,
+    Sqrt,
+    Power,
+    ACos,
+    Radians,
 )
 from django.db.models import F
 
@@ -66,28 +72,49 @@ class UserFilter(filters.FilterSet):
         fields = ('first_name', 'last_name',
                   'gender', 'distance_to_user')
 
-    def filter_distance(self, queryset, name, max_distance):
+    def filter_distance(self, queryset: QuerySet,
+                        name: str, max_distance: int) -> QuerySet:
         """
         Метод фильтрации пользователей по заданному расстоянию.
 
         Каждому пользователю генерируем поле, обозначающее его
-        расстояние до текущего пользователя.
+        расстояние до текущего пользователя в километрах.
         """
 
-        # Координаты текущего пользователя.
+        # Широта и долгота текущего пользователя.
         lat = self.request.user.profile.latitude
-        lon = self.request.user.profile.latitude
+        lon = self.request.user.profile.longitude
 
         # Радиус Земли.
-        EARTH_RADIUS = 6371
+        EARTH_RADIUS = 6372
 
         # С помощью функций СУБД и вычисляем для каждой записи расстояния
         # до текущего пользователя.
+        # Т.к. сферическая теорема косинусов имеет проблемы с маленькими расстояниями,
+        # было принято решение использовать формулу гаверсинусов с модификацией для антиподов.
+        # А еще я никогда столько страшных слов не слышал.
         queryset = User.objects.select_related('profile').annotate(
-            distance_to_user=ACos(
-                Sin(lat) * Sin(F('profile__latitude')) +
-                Cos(lat) * Cos(F('profile__latitude')) *
-                Cos(Abs(lon - F('profile__longitude')))
+            distance_to_user=ATan(
+                Sqrt(
+                    Power(
+                        Cos(Radians(F('profile__latitude'))) *
+                        Sin(Abs(Radians(lon) - Radians(F('profile__longitude')))), 2
+                    ) +
+                    Power(
+                        Cos(Radians(lat)) * Sin(Radians(F('profile__latitude'))) -
+                        Sin(Radians(lat)) * Cos(Radians(F('profile__latitude'))) *
+                        Cos(Abs(Radians(lon) - Radians(F('profile__longitude')))), 2
+                    )
+                )
+                /
+                (
+                    Sin(Radians(lat)) * Sin(Radians(F('profile__latitude'))) +
+                    Cos(Radians(lat)) * Cos(Radians(F('profile__latitude'))) *
+                    Cos(Abs(
+                        Radians(lon) -
+                        Radians(F('profile__longitude'))
+                    ))
+                )
             ) * EARTH_RADIUS
         ).filter(distance_to_user__lte=max_distance)
 
@@ -97,12 +124,10 @@ class UserFilter(filters.FilterSet):
 class UserListView(generics.ListAPIView):
     """Класс-контроллер списка пользователей"""
 
+    queryset = User.objects.all()
     permission_classes = (IsAuthenticated, )
     serializer_class = UserSerializer
     filterset_class = UserFilter
-
-    def get_queryset(self):
-        return User.objects.exclude(pk=self.request.user.pk)
 
     def get(self, request: Request, *args, **kwargs) -> Response:
         """Метод для отправки отфильтрованного списка пользователей"""
@@ -142,20 +167,22 @@ class LikeUserView(views.APIView):
 
         # Если пользователя не существует, возвращаем ошибку.
         if liked_user is None:
-            return Response(data={'msg': 'Такого пользователя нет'},
+            return Response(data={'msg': 'Такого пользователя нет.'},
                             status=status.HTTP_404_NOT_FOUND)
 
         # Если пользователь пытается оценить сам себя
         if current_user.pk == liked_user.pk:
-            return Response(data={'msg': 'Вы не можете оценить себя'},
+            return Response(data={'msg': 'Вы не можете оценить себя.'},
                             status=status.HTTP_400_BAD_REQUEST)
 
         # Если пользователь уже оценивал этого пользователя, сообщаем об этом.
         if current_user.profile in liked_user.profile.lovers.all():
-            return Response(data={'msg': 'Вы уже оценили этого пользователя'},
+            return Response(data={'msg': 'Вы уже оценили этого пользователя.'},
                             status=status.HTTP_403_FORBIDDEN)
 
         # Совпадение симпатий.
+        # Эта ситуация возникает, когда текущий пользователь оценил пользователя,
+        # который уже есть в списке тех, кто оценил текущего пользователя.
         if liked_user.profile in current_user.profile.lovers.all():
             # Отправляем пользователям письма.
             # current_user.email_user(
@@ -178,9 +205,17 @@ class LikeUserView(views.APIView):
             #         }
             #     )
             # )
-            return Response(data={'lovers_email': liked_user.email})
+
+            # Т.к. взаимная симпатия достигнута, можно больше не отслеживать,
+            # кто кого оценил. Удаляем связь пользователей.
+            current_user.profile.lovers.remove(liked_user)
+
+            return Response(data={
+                'msg': _('Есть взаимная симпатия!'),
+                'lovers_email': liked_user.email
+            })
 
         # Добавляем текущего пользователя в список оценивших.
         liked_user.profile.lovers.add(current_user.profile)
 
-        return Response(data={'msg': f'Вы оценили {liked_user.username}'})
+        return Response(data={'msg': f'Вы оценили {liked_user.username}.'})

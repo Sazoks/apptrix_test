@@ -18,7 +18,3 @@ def set_watermark(input_image_path: str,
 
     base_image.paste(watermark, position)
     base_image.save(input_image_path)
-
-
-if __name__ == '__main__':
-    set_watermark('/')

@@ -4,7 +4,6 @@ from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.utils.translation import gettext_lazy as _
 
-from date_me_please.settings import BASE_DIR
 from clients.models import Profile
 from clients.watermark import set_watermark
 
@@ -56,7 +55,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         fields = ('username', 'password', 'confirm_password',
                   'email', 'first_name', 'last_name', 'profile')
 
-    def validate(self, attrs):
+    def validate(self, attrs: dict) -> dict:
         """Метод валидации"""
 
         # Проверяем пароли на совпадение.
@@ -65,7 +64,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         return attrs
 
-    def create(self, validated_data):
+    def create(self, validated_data: dict) -> User:
         """Метод записи данных в БД"""
 
         # Сначала создаем пользователя в БД.
@@ -100,11 +99,12 @@ class UserSerializer(serializers.ModelSerializer):
     """Сериализатор для пользовательских данных"""
 
     profile = ProfileSerializer(read_only=True)
-    distance_to_user = serializers.IntegerField(required=False)
+    distance_to_user = serializers.FloatField(required=False)
 
     class Meta:
         """Класс настроек сериализатора"""
 
         model = User
         fields = ('pk', 'username', 'first_name',
-                  'last_name', 'email', 'profile', 'distance_to_user')
+                  'last_name', 'email', 'profile',
+                  'distance_to_user')
