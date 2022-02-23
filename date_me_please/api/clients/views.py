@@ -183,7 +183,6 @@ class LikeUserView(views.APIView):
         server.sendmail(EMAIL_HOST_USER, beloved.email, text)
         server.quit()
 
-
     def post(self, request: Request, *args, **kwargs) -> Response:
         """Метод для оценки пользователя другим пользователем"""
 

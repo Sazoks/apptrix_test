@@ -90,7 +90,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         )
 
         # FIXME:
-        #  Сделать нормальный импорт.
+        #  Сделать нормальный импорт файлов.
         #  Разобраться, почему не работает относительный.
         set_watermark(sys.path[0] + new_profile.avatar.url,
                       sys.path[0] + '/clients/static/clients/img/watermark.png',
