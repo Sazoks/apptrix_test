@@ -4,7 +4,9 @@ from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.utils.translation import gettext_lazy as _
 
+from date_me_please.settings import BASE_DIR
 from clients.models import Profile
+from clients.watermark import set_watermark
 
 
 class ProfileSerializer(serializers.ModelSerializer):
@@ -78,13 +80,18 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         # Затем создаем и связываем профиль пользователя.
         profile_data = validated_data['profile']
-        Profile.objects.create(
+        new_profile = Profile.objects.create(
             user=new_user,
             avatar=profile_data['avatar'],
             gender=profile_data['gender'],
             longitude=profile_data['longitude'],
             latitude=profile_data['latitude'],
         )
+
+        # FIXME: Сделать нормальную передачу путей до изображений.
+        import sys
+        set_watermark(sys.path[0] + new_profile.avatar.url,
+                      sys.path[0] + '/clients/static/clients/img/watermark.png')
 
         return new_user
 
@@ -93,10 +100,11 @@ class UserSerializer(serializers.ModelSerializer):
     """Сериализатор для пользовательских данных"""
 
     profile = ProfileSerializer(read_only=True)
+    distance_to_user = serializers.IntegerField(required=False)
 
     class Meta:
         """Класс настроек сериализатора"""
 
         model = User
         fields = ('pk', 'username', 'first_name',
-                  'last_name', 'email', 'profile')
+                  'last_name', 'email', 'profile', 'distance_to_user')

@@ -26,15 +26,6 @@ class Profile(models.Model):
         choices=Gender.choices,
         verbose_name=_('Пол'),
     )
-    longitude = models.DecimalField(
-        max_digits=13,
-        decimal_places=10,
-        validators=[validators.MinValueValidator(-180),
-                    validators.MaxValueValidator(180)],
-        verbose_name=_('Долгота'),
-        help_text=_('Северное направление считается положительным. '
-                    'Южное - отрицательным.')
-    )
     latitude = models.DecimalField(
         max_digits=13,
         decimal_places=10,
@@ -43,6 +34,15 @@ class Profile(models.Model):
         verbose_name=_('Широта'),
         help_text=_('Восточное направление считается положительным. '
                     'Западное - отрицательным.')
+    )
+    longitude = models.DecimalField(
+        max_digits=13,
+        decimal_places=10,
+        validators=[validators.MinValueValidator(-180),
+                    validators.MaxValueValidator(180)],
+        verbose_name=_('Долгота'),
+        help_text=_('Северное направление считается положительным. '
+                    'Южное - отрицательным.')
     )
     user = models.OneToOneField(
         to=User,

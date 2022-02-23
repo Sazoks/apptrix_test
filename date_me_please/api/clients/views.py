@@ -2,6 +2,14 @@ import smtplib
 
 from django.template.loader import render_to_string
 from django.contrib.auth.models import User
+from django.db.models.functions import (
+    Sin,
+    Cos,
+    ACos,
+    Abs,
+)
+from django.db.models import F
+
 from rest_framework import generics
 from rest_framework import views
 from rest_framework import status
@@ -46,27 +54,61 @@ class UserFilter(filters.FilterSet):
         field_name='profile__gender',
         choices=Profile.Gender.choices,
     )
+    distance_to_user = filters.NumberFilter(
+        label='Максимальная дистанция',
+        method='filter_distance',
+    )
 
     class Meta:
         """Класс настроект фильтра"""
 
         model = User
-        fields = ('first_name', 'last_name', 'gender')
+        fields = ('first_name', 'last_name',
+                  'gender', 'distance_to_user')
+
+    def filter_distance(self, queryset, name, max_distance):
+        """
+        Метод фильтрации пользователей по заданному расстоянию.
+
+        Каждому пользователю генерируем поле, обозначающее его
+        расстояние до текущего пользователя.
+        """
+
+        # Координаты текущего пользователя.
+        lat = self.request.user.profile.latitude
+        lon = self.request.user.profile.latitude
+
+        # Радиус Земли.
+        EARTH_RADIUS = 6371
+
+        # С помощью функций СУБД и вычисляем для каждой записи расстояния
+        # до текущего пользователя.
+        queryset = User.objects.select_related('profile').annotate(
+            distance_to_user=ACos(
+                Sin(lat) * Sin(F('profile__latitude')) +
+                Cos(lat) * Cos(F('profile__latitude')) *
+                Cos(Abs(lon - F('profile__longitude')))
+            ) * EARTH_RADIUS
+        ).filter(distance_to_user__lte=max_distance)
+
+        return queryset
 
 
 class UserListView(generics.ListAPIView):
     """Класс-контроллер списка пользователей"""
 
-    queryset = User.objects.all()
-    permission_classes = (AllowAny, )
+    permission_classes = (IsAuthenticated, )
     serializer_class = UserSerializer
     filterset_class = UserFilter
+
+    def get_queryset(self):
+        return User.objects.exclude(pk=self.request.user.pk)
 
     def get(self, request: Request, *args, **kwargs) -> Response:
         """Метод для отправки отфильтрованного списка пользователей"""
 
         queryset = self.filter_queryset(self.get_queryset())
-        serializer = UserSerializer(queryset, many=True)
+        serializer = self.serializer_class(queryset, many=True)
         return Response(serializer.data)
 
 
@@ -82,7 +124,7 @@ class LoverListView(generics.ListAPIView):
 
         lovers = [lover_profile.user for lover_profile in
                   request.user.profile.lovers.all()]
-        serializer = UserSerializer(lovers, many=True)
+        serializer = self.serializer_class(lovers, many=True)
         return Response(serializer.data)
 
 
