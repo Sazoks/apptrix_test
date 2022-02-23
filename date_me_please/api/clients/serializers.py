@@ -67,3 +67,15 @@ class RegisterSerializer(serializers.ModelSerializer):
         )
 
         return new_user
+
+
+class UserSerializer(serializers.ModelSerializer):
+    """Сериализатор для пользовательских данных"""
+
+    profile = ProfileSerializer(read_only=True)
+
+    class Meta:
+        """Класс настроек сериализатора"""
+        model = User
+        fields = ('pk', 'username', 'first_name',
+                  'last_name', 'email', 'profile')

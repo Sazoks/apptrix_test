@@ -18,14 +18,20 @@ class Profile(models.Model):
 
     avatar = models.ImageField(
         upload_to='user_avatars',
-        verbose_name=_('Аватар'),
         null=True,
         blank=True,
+        verbose_name=_('Аватар'),
     )
     gender = models.CharField(
         max_length=2,
         choices=Gender.choices,
         verbose_name=_('Пол'),
+    )
+    lovers = models.ManyToManyField(
+        to='Profile',
+        symmetrical=False,
+        blank=True,
+        verbose_name=_('Оценившие'),
     )
     user = models.OneToOneField(
         to=User,
