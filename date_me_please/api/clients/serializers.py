@@ -26,7 +26,9 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     email = serializers.EmailField(
         required=True,
-        validators=[validators.UniqueValidator(queryset=User.objects.all())],
+        validators=[
+            validators.UniqueValidator(queryset=User.objects.all()),
+        ],
         label=_('Эл. почта'),
     )
     password = serializers.CharField(
@@ -62,7 +64,9 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         # Проверяем пароли на совпадение.
         if attrs['password'] != attrs['confirm_password']:
-            raise serializers.ValidationError({'password': 'Пароли должны совпадать.'})
+            raise serializers.ValidationError({
+                'password': 'Пароли должны совпадать.'
+            })
 
         return attrs
 
@@ -93,7 +97,8 @@ class RegisterSerializer(serializers.ModelSerializer):
         #  Сделать нормальный импорт файлов.
         #  Разобраться, почему не работает относительный.
         set_watermark(sys.path[0] + new_profile.avatar.url,
-                      sys.path[0] + '/clients/static/clients/img/watermark.png',
+                      sys.path[0] + '/clients/static/clients'
+                                    '/img/watermark.png',
                       (0, 0))
 
         return new_user

@@ -5,12 +5,8 @@ from django.utils.translation import gettext as _
 from django.contrib.auth.models import User
 from django.db.models import QuerySet
 from django.db.models.functions import (
-    Sin,
-    Cos,
-    ATan,
-    Abs,
-    Sqrt,
-    Power,
+    Sin, Cos, ATan,
+    Abs, Sqrt, Power,
     Radians,
 )
 from django.db.models import F
@@ -87,10 +83,11 @@ class UserFilter(filters.FilterSet):
         # Радиус Земли.
         EARTH_RADIUS = 6372
 
-        # С помощью функций СУБД вычисляем для каждой записи расстояния
-        # до текущего пользователя.
-        # Т.к. сферическая теорема косинусов имеет проблемы с маленькими расстояниями,
-        # было принято решение использовать формулу гаверсинусов с модификацией для антиподов.
+        # С помощью функций СУБД вычисляем для каждой
+        # записи расстояния до текущего пользователя.
+        # Т.к. сферическая теорема косинусов имеет проблемы
+        # с маленькими расстояниями, было принято решение
+        # использовать формулу гаверсинусов с модификацией для антиподов.
         # А еще я никогда столько страшных слов не слышал.
         queryset = User.objects.select_related('profile').annotate(
             distance_to_user=ATan(
