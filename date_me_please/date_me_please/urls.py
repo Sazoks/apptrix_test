@@ -22,6 +22,10 @@ from django.conf.urls.static import (
     static,
     settings,
 )
+from django.contrib.staticfiles.views import serve as static_serve
+from django.views.static import serve as media_serve
+
+admin.autodiscover()
 
 urlpatterns = [
     path('api/', include('api.urls')),

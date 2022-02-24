@@ -1,1 +1,0 @@
-web: gunicorn date_me_please.date_me_please.wsgi:application

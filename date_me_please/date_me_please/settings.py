@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
 import os
+import django_heroku
 from pathlib import Path
 from dotenv import load_dotenv
 from datetime import timedelta
@@ -29,13 +30,9 @@ load_dotenv()
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = bool(os.getenv('DEBUG'))
+DEBUG = True
 
-ALLOWED_HOSTS = [
-    'date-me-please.herokuapp.com',
-    '.ngrok.io',
-    '127.0.0.1',
-]
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -161,7 +158,6 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 LOGIN_URL = 'rest_framework:login'
 LOGOUT_URL = 'rest_framework:logout'
 
-
 # Настройки REST-фреймворка.
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -181,3 +177,5 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
 }
+
+django_heroku.settings(locals())
