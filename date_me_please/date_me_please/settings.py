@@ -152,10 +152,15 @@ EMAIL_USER_TLS = True
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 
+LOGIN_URL = 'rest_framework:login'
+LOGOUT_URL = 'rest_framework:logout'
+
+
 # Настройки REST-фреймворка.
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.SessionAuthentication',  # Для входа в swagger.
+        # Для входа в swagger и панель DRF.
+        'rest_framework.authentication.SessionAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_FILTER_BACKENDS': (
@@ -166,8 +171,8 @@ REST_FRAMEWORK = {
 
 # Настройки подсистемы аутентификации на основе JWT.
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
 }
+

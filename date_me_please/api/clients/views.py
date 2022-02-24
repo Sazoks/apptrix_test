@@ -56,8 +56,7 @@ class LogoutView(generics.GenericAPIView):
 
 class UserDetailView(generics.RetrieveAPIView):
     """
-    Класс-контроллер для предоставления информации
-    о пользователе.
+    Класс-контроллер для предоставления информации о пользователе
     """
 
     queryset = User.objects.all()
@@ -158,7 +157,7 @@ class LoverListView(generics.ListAPIView):
     serializer_class = UserSerializer
 
     def get(self, request: Request, *args, **kwargs) -> Response:
-        """Метод для отправки списка оценивших пользователей"""
+        """Метод для полуения списка оценивших пользователей"""
 
         lovers = [lover_profile.user for lover_profile in
                   request.user.profile.lovers.all()]
