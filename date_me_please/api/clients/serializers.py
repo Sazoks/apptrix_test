@@ -2,12 +2,32 @@ import sys
 
 from rest_framework import serializers
 from rest_framework import validators
+from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.utils.translation import gettext_lazy as _
 
 from clients.models import Profile
 from clients.watermark import set_watermark
+
+
+class LogoutSerializer(serializers.Serializer):
+    """Сериализатор для рефреш-токена"""
+
+    refresh = serializers.CharField()
+    default_error_messages = {
+        'bad_token': _('Токен уже истек или невалиден.'),
+    }
+
+    def validate(self, attrs):
+        self.token = attrs['refresh']
+        return attrs
+
+    def save(self, **kwargs):
+        try:
+            RefreshToken(self.token).blacklist()
+        except TokenError:
+            self.fail('bad_token')
 
 
 class ProfileSerializer(serializers.ModelSerializer):

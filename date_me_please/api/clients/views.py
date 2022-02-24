@@ -24,6 +24,7 @@ from django_filters import rest_framework as filters
 
 from .serializers import (
     RegisterSerializer,
+    LogoutSerializer,
     UserSerializer,
 )
 from clients.models import Profile
@@ -35,6 +36,22 @@ class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = (AllowAny, )
     serializer_class = RegisterSerializer
+
+
+class LogoutView(generics.GenericAPIView):
+    """Класс-контроллер для выхода из системы с использованием JWT"""
+
+    serializer_class = LogoutSerializer
+    permission_classes = (IsAuthenticated, )
+
+    def post(self, request: Request, *args, **kwargs) -> Response:
+        """Добавление токена в черный список"""
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class UserDetailView(generics.RetrieveAPIView):
