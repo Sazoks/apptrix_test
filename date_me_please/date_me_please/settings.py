@@ -32,7 +32,8 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = bool(os.getenv('DEBUG'))
 
 ALLOWED_HOSTS = [
-    'https://date-me-please.herokuapp.com/',
+    'date-me-please.herokuapp.com',
+    '.ngrok.io',
     '127.0.0.1',
 ]
 
@@ -180,4 +181,3 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
 }
-
