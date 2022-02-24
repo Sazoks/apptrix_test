@@ -1,4 +1,4 @@
-import sys
+from pathlib import Path
 
 from rest_framework import serializers
 from rest_framework import validators
@@ -11,6 +11,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.utils.translation import gettext_lazy as _
 
 from clients.models import Profile
+from date_me_please.settings import BASE_DIR
 from clients.watermark import set_watermark
 
 
@@ -116,12 +117,8 @@ class RegisterSerializer(serializers.ModelSerializer):
             latitude=profile_data['latitude'],
         )
 
-        # FIXME:
-        #  Сделать нормальный импорт файлов.
-        #  Разобраться, почему не работает относительный.
-        set_watermark(sys.path[0] + new_profile.avatar.url,
-                      sys.path[0] + '/clients/static/clients'
-                                    '/img/watermark.png',
+        set_watermark(str(BASE_DIR) + str(new_profile.avatar.url),
+                      BASE_DIR / 'staticfiles/clients/img/watermark.png',
                       (0, 0))
 
         return new_user
