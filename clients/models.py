@@ -28,8 +28,8 @@ class Profile(models.Model):
         verbose_name=_('Пол'),
     )
     latitude = models.DecimalField(
-        max_digits=16,
-        decimal_places=13,
+        max_digits=30,
+        decimal_places=20,
         validators=[validators.MinValueValidator(-180),
                     validators.MaxValueValidator(180)],
         verbose_name=_('Широта'),
@@ -37,8 +37,8 @@ class Profile(models.Model):
                     'Западное - отрицательным.')
     )
     longitude = models.DecimalField(
-        max_digits=16,
-        decimal_places=13,
+        max_digits=30,
+        decimal_places=20,
         validators=[validators.MinValueValidator(-180),
                     validators.MaxValueValidator(180)],
         verbose_name=_('Долгота'),

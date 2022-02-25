@@ -5,7 +5,7 @@ from django.utils.translation import gettext as _
 from django.contrib.auth.models import User
 from django.db.models import QuerySet
 from django.db.models.functions import (
-    Sin, Cos, ATan,
+    Sin, Cos, ATan2,
     Abs, Sqrt, Power,
     Radians,
 )
@@ -106,7 +106,7 @@ class UserFilter(filters.FilterSet):
         # использовать формулу гаверсинусов с модификацией для антиподов.
         # А еще я никогда столько страшных слов не слышал.
         queryset = User.objects.select_related('profile').annotate(
-            distance_to_user=ATan(
+            distance_to_user=ATan2(
                 Sqrt(
                     Power(
                         Cos(Radians(F('profile__latitude'))) *
@@ -118,7 +118,7 @@ class UserFilter(filters.FilterSet):
                         Cos(Abs(Radians(lon) - Radians(F('profile__longitude')))), 2
                     )
                 )
-                /
+                ,
                 (
                     Sin(Radians(lat)) * Sin(Radians(F('profile__latitude'))) +
                     Cos(Radians(lat)) * Cos(Radians(F('profile__latitude'))) *
