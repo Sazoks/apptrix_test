@@ -84,7 +84,7 @@ class RegisterSerializer(serializers.ModelSerializer):
                   'email', 'first_name', 'last_name', 'profile')
 
     def validate(self, attrs: dict) -> dict:
-        """Метод валидации"""
+        """Метод валидации данных"""
 
         # Проверяем пароли на совпадение.
         if attrs['password'] != attrs['confirm_password']:
@@ -111,15 +111,18 @@ class RegisterSerializer(serializers.ModelSerializer):
         profile_data = validated_data['profile']
         new_profile = Profile.objects.create(
             user=new_user,
-            avatar=profile_data['avatar'],
+            avatar=profile_data['avatar'] if 'avatar' in
+                                             profile_data.keys() else None,
             gender=profile_data['gender'],
             longitude=profile_data['longitude'],
             latitude=profile_data['latitude'],
         )
 
-        set_watermark(str(BASE_DIR) + str(new_profile.avatar.url),
-                      BASE_DIR / 'staticfiles/clients/img/watermark.png',
-                      (0, 0))
+        # Если пользователь загрузил аватарку, обработаем ее.
+        if 'avatar' in profile_data.keys():
+            set_watermark(str(BASE_DIR) + str(new_profile.avatar.url),
+                          BASE_DIR / 'staticfiles/clients/img/watermark.png',
+                          (0, 0))
 
         return new_user
 

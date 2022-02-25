@@ -238,4 +238,4 @@ class LikeUserView(views.APIView):
         # Добавляем текущего пользователя в список оценивших.
         liked_user.profile.lovers.add(current_user.profile)
 
-        return Response(data={'msg': f'Вы оценили {liked_user.username}.'})
+        return Response(data={'msg': f'Вы оценили {liked_user.username}.'},)
