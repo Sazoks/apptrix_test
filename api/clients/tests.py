@@ -1,8 +1,6 @@
-import io
 import random
 from typing import List
 
-from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
 from rest_framework.test import (
     APITestCase,

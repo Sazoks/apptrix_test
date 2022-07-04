@@ -17,5 +17,5 @@ urlpatterns = [
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-    path('doc/', get_swagger_view(title='Date me please API')),
+    path('docs/', get_swagger_view(title='Date me please API')),
 ]

@@ -41,8 +41,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         """Класс настроек сериализатора"""
 
         model = Profile
-        fields = ('avatar', 'gender',
-                  'longitude', 'latitude')
+        fields = ('avatar', 'gender', 'longitude', 'latitude')
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -109,20 +108,24 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         # Затем создаем и связываем профиль пользователя.
         profile_data = validated_data['profile']
-        new_profile = Profile.objects.create(
+        new_profile = Profile(
             user=new_user,
-            avatar=profile_data['avatar'] if 'avatar' in
-                                             profile_data.keys() else None,
             gender=profile_data['gender'],
             longitude=profile_data['longitude'],
             latitude=profile_data['latitude'],
         )
+        # Если было загружено изображение для аватар, сохраняем его.
+        if profile_data['avatar'] is not None:
+            new_profile.avatar = profile_data['avatar']
+        new_profile.save()
 
-        # Если пользователь загрузил аватарку, обработаем ее.
-        if 'avatar' in profile_data.keys():
-            set_watermark(str(BASE_DIR) + str(new_profile.avatar.url),
-                          BASE_DIR / 'staticfiles/clients/img/watermark.png',
-                          (0, 0))
+        # Если пользователь загрузил аватарку, обработаем ее после сохранения.
+        if profile_data['avatar'] is not None:
+            set_watermark(
+                str(BASE_DIR) + str(new_profile.avatar.url),
+                BASE_DIR / 'staticfiles/clients/img/watermark.png',
+                (0, 0),
+            )
 
         return new_user
 

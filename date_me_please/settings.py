@@ -161,7 +161,7 @@ LOGOUT_URL = 'rest_framework:logout'
 # Настройки REST-фреймворка.
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        # Для входа в swagger и панель DRF.
+        # Вход на основе сессий для swagger'a и панели DRF.
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
