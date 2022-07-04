@@ -115,12 +115,12 @@ class RegisterSerializer(serializers.ModelSerializer):
             latitude=profile_data['latitude'],
         )
         # Если было загружено изображение для аватар, сохраняем его.
-        if profile_data['avatar'] is not None:
+        if profile_data.get('avatar', None) is not None:
             new_profile.avatar = profile_data['avatar']
         new_profile.save()
 
         # Если пользователь загрузил аватарку, обработаем ее после сохранения.
-        if profile_data['avatar'] is not None:
+        if profile_data.get('avatar', None) is not None:
             set_watermark(
                 str(BASE_DIR) + str(new_profile.avatar.url),
                 BASE_DIR / 'staticfiles/clients/img/watermark.png',

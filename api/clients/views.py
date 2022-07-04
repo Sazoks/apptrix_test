@@ -1,9 +1,9 @@
-import os
 import smtplib
+from decouple import config
 
+from django.conf import settings
 from django.utils.translation import gettext as _
 from django.contrib.auth.models import User
-
 
 from rest_framework import generics
 from rest_framework import views
@@ -94,12 +94,13 @@ class LikeUserView(views.APIView):
 
     permission_classes = (IsAuthenticated, )
 
-    def __send_love(self, beloved: User, lover: User) -> None:
+    @staticmethod
+    def __send_love(beloved: User, lover: User) -> None:
         """Метод отправки письма со взаимной симпатией"""
 
         # FIXME:
-        #  Этот способ отправки сообщения, как по-мне, - костыль, хоть и рабочий
-        #  Необходимо разобраться, почему не работает стандартный
+        #  Этот способ отправки сообщения, как по-мне, - костыль, хоть и
+        #  рабочий. Необходимо разобраться, почему не работает стандартный
         #  способ отправки сообщений.
         server = smtplib.SMTP('smtp.gmail.com', 25)
         server.connect("smtp.gmail.com", 587)
@@ -107,8 +108,8 @@ class LikeUserView(views.APIView):
         server.starttls()
         server.ehlo()
 
-        EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
-        EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+        EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+        EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
         server.login(EMAIL_HOST_USER, EMAIL_HOST_PASSWORD)
 
@@ -143,8 +144,9 @@ class LikeUserView(views.APIView):
                             status=status.HTTP_403_FORBIDDEN)
 
         # Совпадение симпатий.
-        # Эта ситуация возникает, когда текущий пользователь оценил пользователя,
-        # который уже есть в списке тех, кто оценил текущего пользователя.
+        # Эта ситуация возникает, когда текущий пользователь оценил
+        # пользователя, который уже есть в списке тех, кто оценил
+        # текущего пользователя.
         if liked_user.profile in current_user.profile.lovers.all():
             # Отправляем пользователям письма.
             self.__send_love(current_user, liked_user)
